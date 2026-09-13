@@ -10,7 +10,6 @@ import { Radius, Spacing } from '../src/theme/spacing';
 import { CyberBackground } from '../src/components/CyberBackground';
 import { GameHeader } from '../src/components/GameHeader';
 import { GameOverModal } from '../src/components/GameOverModal';
-import { ControlsOverlay } from '../src/components/ControlsOverlay';
 import { screenWidth, screenHeight } from '../src/utils/dimensions';
 import { tapLight, notifySuccess, notifyError, tapMedium } from '../src/utils/haptics';
 import { useKeyboard, KeyboardKey } from '../src/hooks/useKeyboard';
@@ -230,18 +229,7 @@ export default function Tetris() {
           onBack={() => { router.replace('/'); }}
         />
 
-        <ControlsOverlay
-          instructions={[
-            "Clear horizontal lines by dropping blocks.",
-            "The game gets faster as your level increases."
-          ]}
-          controls={[
-            { action: "Move", input: "Swipe / A/D / Arrows" },
-            { action: "Rotate", input: "Tap / W / Up" },
-            { action: "Hard Drop", input: "Flick Down / Space" },
-            { action: "Hold", input: "Enter" },
-          ]}
-        />
+        
 
         <View style={styles.mainContent}>
             
