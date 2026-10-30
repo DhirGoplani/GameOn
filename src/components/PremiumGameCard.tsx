@@ -43,5 +43,4 @@ export class PremiumGameCard extends BaseCard<PremiumGameCardProps, BaseCardStat
   }
 }
 
-export { GameCard };
 export default PremiumGameCard;
