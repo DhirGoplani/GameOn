@@ -371,18 +371,7 @@ export default function FlappyBird() {
     velSV.value = JUMP_FORCE;
     birdRot.value = -24;
     tapLight();
-
-    const newP: Particle[] = Array.from({ length: 3 }, () => ({
-      id: particleIdRef.current++,
-      x: BIRD_X_POS + 8,
-      y: birdY.value + BIRD_SIZE * 0.7,
-      vx: (Math.random() - 0.5) * 3 - 2,
-      vy: Math.random() * 2 + 1,
-      life: 0.8,
-      color: Math.random() > 0.5 ? '#D7CCC8' : '#8D6E63',
-    }));
-    setParticles(p => [...p, ...newP]);
-  }, [JUMP_FORCE, BIRD_X_POS]);
+  }, [JUMP_FORCE]);
 
   const jump = useCallback(() => {
     if (gameOverRef.current || isPausedRef.current) return;

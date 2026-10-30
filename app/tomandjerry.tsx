@@ -281,7 +281,7 @@ export default function JerryVsTomGame() {
   }, [status, cellSize, jerryAnimX, jerryAnimY, jerryScale]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || typeof window.addEventListener !== 'function') return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key.toLowerCase() === 'p') {
         e.preventDefault();

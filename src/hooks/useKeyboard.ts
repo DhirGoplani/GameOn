@@ -38,7 +38,7 @@ export function useKeyboard(
   }, [onKeyDown]);
 
   useEffect(() => {
-    if (Platform.OS !== 'web') return;
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || typeof window.addEventListener !== 'function') return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent rapid firing when holding a key down if requested
