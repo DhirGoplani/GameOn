@@ -213,7 +213,7 @@ export class HowToPlayModal extends React.Component<HowToPlayModalProps, HowToPl
                   pressed && styles.dismissBtnPressed,
                 ]}
               >
-                <Text style={styles.dismissBtnText}>GOT IT • LET'S PLAY</Text>
+                <Text style={styles.dismissBtnText}>{"GOT IT • LET'S PLAY"}</Text>
               </Pressable>
             </View>
           </Animated.View>

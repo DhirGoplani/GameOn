@@ -23,6 +23,4 @@ export class CyberBackground extends BaseBackground<CyberBackgroundProps, BaseCo
   }
 }
 
-export { ThemedGameBackground };
-export type { GameTheme };
 export default CyberBackground;

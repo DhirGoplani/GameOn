@@ -1,15 +1,3 @@
-export * from './BaseEngine';
-export * from './TicTacToeEngine';
-export * from './Connect4Engine';
-export * from './Game2048Engine';
-export * from './SnakeEngine';
-export * from './SudokuEngine';
-export * from './TetrisEngine';
-export * from './DinoEngine';
-export * from './FlappyBirdEngine';
-export * from './BlockodukoEngine';
-export * from './TomAndJerryEngine';
-
 import { TicTacToeEngine } from './TicTacToeEngine';
 import { Connect4Engine } from './Connect4Engine';
 import { Game2048Engine } from './Game2048Engine';
@@ -21,6 +9,18 @@ import { FlappyBirdEngine } from './FlappyBirdEngine';
 import { BlockodukoEngine } from './BlockodukoEngine';
 import { TomAndJerryEngine } from './TomAndJerryEngine';
 import { BaseEngine } from './BaseEngine';
+
+export * from './BaseEngine';
+export * from './TicTacToeEngine';
+export * from './Connect4Engine';
+export * from './Game2048Engine';
+export * from './SnakeEngine';
+export * from './SudokuEngine';
+export * from './TetrisEngine';
+export * from './DinoEngine';
+export * from './FlappyBirdEngine';
+export * from './BlockodukoEngine';
+export * from './TomAndJerryEngine';
 
 export type GameEngineId =
   | 'tictactoe'
