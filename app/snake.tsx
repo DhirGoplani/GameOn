@@ -469,6 +469,9 @@ export default function Snake() {
       color: i % 2 === 0 ? ACCENT_WHITE : color,
     }));
     setParticles((p) => [...p, ...newParticles].slice(-40));
+    setTimeout(() => {
+      setParticles([]);
+    }, 450);
   };
 
   useEffect(() => {

@@ -131,45 +131,14 @@ const BlinkingStar = memo(({
 BlinkingStar.displayName = 'BlinkingStar';
 
 const BLINKING_STARS_DATA: BlinkingStarProps[] = [
-  // Upper sky stars
-  { x: 4, y: 5, size: 2, blinkType: 'sharp_blink', delay: 200, duration: 2800 },
-  { x: 11, y: 12, size: 1.5, blinkType: 'pulse', delay: 900, duration: 3400 },
-  { x: 17, y: 4, size: 2, blinkType: 'cross', delay: 400, duration: 4200 },
-  { x: 23, y: 18, size: 1.5, blinkType: 'pulse', delay: 1500, duration: 3100 },
+  { x: 11, y: 12, size: 2, blinkType: 'pulse', delay: 400, duration: 3200 },
   { x: 30, y: 9, size: 2.5, blinkType: 'sharp_blink', delay: 100, duration: 2600 },
-  { x: 37, y: 3, size: 2, blinkType: 'pulse', delay: 1800, duration: 3800 },
-  { x: 44, y: 15, size: 1.5, blinkType: 'cross', delay: 600, duration: 4500 },
-  { x: 51, y: 7, size: 2, blinkType: 'sharp_blink', delay: 1200, duration: 2900 },
-  { x: 57, y: 20, size: 1.5, blinkType: 'pulse', delay: 2200, duration: 3300 },
-  { x: 64, y: 5, size: 2.5, blinkType: 'sharp_blink', delay: 500, duration: 2700 },
-  { x: 71, y: 13, size: 2, blinkType: 'pulse', delay: 1300, duration: 3600 },
-  { x: 77, y: 4, size: 1.5, blinkType: 'cross', delay: 800, duration: 4100 },
-  { x: 83, y: 17, size: 2, blinkType: 'sharp_blink', delay: 1700, duration: 3000 },
-  { x: 90, y: 8, size: 1.5, blinkType: 'pulse', delay: 300, duration: 3500 },
-  { x: 95, y: 22, size: 2, blinkType: 'pulse', delay: 1900, duration: 3200 },
-  // Mid sky stars
-  { x: 7, y: 28, size: 1.5, blinkType: 'pulse', delay: 1100, duration: 3900 },
-  { x: 14, y: 36, size: 2, blinkType: 'sharp_blink', delay: 700, duration: 2500 },
-  { x: 21, y: 30, size: 1.5, blinkType: 'cross', delay: 1600, duration: 4300 },
-  { x: 28, y: 42, size: 2, blinkType: 'pulse', delay: 2400, duration: 3100 },
-  { x: 35, y: 33, size: 1.5, blinkType: 'sharp_blink', delay: 400, duration: 2800 },
-  { x: 42, y: 39, size: 2, blinkType: 'pulse', delay: 1400, duration: 3700 },
-  { x: 49, y: 27, size: 2, blinkType: 'sharp_blink', delay: 800, duration: 2600 },
-  { x: 56, y: 40, size: 1.5, blinkType: 'pulse', delay: 2000, duration: 3400 },
-  { x: 63, y: 31, size: 2, blinkType: 'cross', delay: 950, duration: 4400 },
-  { x: 70, y: 38, size: 1.5, blinkType: 'sharp_blink', delay: 350, duration: 2900 },
-  { x: 78, y: 29, size: 2, blinkType: 'pulse', delay: 1750, duration: 3500 },
-  { x: 85, y: 37, size: 1.5, blinkType: 'pulse', delay: 1250, duration: 3800 },
-  { x: 92, y: 33, size: 2, blinkType: 'sharp_blink', delay: 650, duration: 2700 },
-  // Horizon-adjacent pixel stars (as seen in the reference artwork)
-  { x: 5, y: 52, size: 1.5, blinkType: 'pulse', delay: 850, duration: 3200 },
-  { x: 18, y: 56, size: 2, blinkType: 'sharp_blink', delay: 1400, duration: 2600 },
-  { x: 31, y: 48, size: 1.5, blinkType: 'cross', delay: 550, duration: 4100 },
-  { x: 46, y: 54, size: 2, blinkType: 'pulse', delay: 1900, duration: 3600 },
-  { x: 59, y: 50, size: 1.5, blinkType: 'sharp_blink', delay: 1100, duration: 2800 },
-  { x: 74, y: 55, size: 2, blinkType: 'cross', delay: 750, duration: 4300 },
-  { x: 88, y: 51, size: 1.5, blinkType: 'pulse', delay: 1650, duration: 3400 },
-  { x: 96, y: 58, size: 2, blinkType: 'sharp_blink', delay: 450, duration: 2900 },
+  { x: 51, y: 7, size: 2, blinkType: 'sharp_blink', delay: 800, duration: 2900 },
+  { x: 74, y: 15, size: 2, blinkType: 'pulse', delay: 600, duration: 3500 },
+  { x: 88, y: 22, size: 2, blinkType: 'sharp_blink', delay: 1200, duration: 3000 },
+  { x: 95, y: 8, size: 1.5, blinkType: 'pulse', delay: 300, duration: 3400 },
+  { x: 21, y: 30, size: 1.5, blinkType: 'pulse', delay: 1000, duration: 3600 },
+  { x: 63, y: 31, size: 2, blinkType: 'pulse', delay: 1500, duration: 3300 },
 ];
 
 const BlinkingStarField = memo(() => (
@@ -307,13 +276,8 @@ const RetroPixelLandscape = memo(() => {
       <BlinkingStarField />
 
       {/* 5. Rising Stardust Sparks (Drifting up from the neon horizon) */}
-      <RisingStardust x={10} startY={72} size={2.5} delay={0} duration={6500} />
-      <RisingStardust x={22} startY={75} size={2} delay={1800} duration={5800} />
-      <RisingStardust x={36} startY={73} size={2.5} delay={3200} duration={7000} />
-      <RisingStardust x={52} startY={76} size={2} delay={900} duration={6200} />
-      <RisingStardust x={67} startY={74} size={2.5} delay={2400} duration={6800} />
-      <RisingStardust x={81} startY={75} size={2} delay={1200} duration={5900} />
-      <RisingStardust x={94} startY={72} size={2.5} delay={2900} duration={6400} />
+      <RisingStardust x={25} startY={74} size={2} delay={0} duration={6000} />
+      <RisingStardust x={75} startY={74} size={2} delay={2500} duration={6000} />
 
       {/* 6. Multi-Layer Retro Pixel Mountains (Pure Procedural Geometry - Zero Images!) */}
       {/* 6A. Distant Mountain Ridge (Deep Violet Silhouettes) */}
