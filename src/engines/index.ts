@@ -8,6 +8,7 @@ import { DinoEngine } from './DinoEngine';
 import { FlappyBirdEngine } from './FlappyBirdEngine';
 import { BlockodukoEngine } from './BlockodukoEngine';
 import { TomAndJerryEngine } from './TomAndJerryEngine';
+import { PacmanEngine } from './PacmanEngine';
 import { BaseEngine } from './BaseEngine';
 
 export * from './BaseEngine';
@@ -21,6 +22,7 @@ export * from './DinoEngine';
 export * from './FlappyBirdEngine';
 export * from './BlockodukoEngine';
 export * from './TomAndJerryEngine';
+export * from './PacmanEngine';
 
 export type GameEngineId =
   | 'tictactoe'
@@ -32,7 +34,8 @@ export type GameEngineId =
   | 'dinojump'
   | 'flappybird'
   | 'blockoduko'
-  | 'tomandjerry';
+  | 'tomandjerry'
+  | 'pacman';
 
 /**
  * GameEngineFactory (Creational Factory Pattern)
@@ -61,6 +64,8 @@ export class GameEngineFactory {
         return new BlockodukoEngine(initialHighScore);
       case 'tomandjerry':
         return new TomAndJerryEngine(initialHighScore);
+      case 'pacman':
+        return new PacmanEngine(initialHighScore);
       default:
         throw new Error(`Unsupported game engine type: ${id}`);
     }

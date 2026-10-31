@@ -1,6 +1,6 @@
 import { Entity, Hitbox } from './Entity';
 
-export type DinoPose = 'RUNNING' | 'JUMPING' | 'DUCKING' | 'DEAD';
+export type DinoPose = 'IDLE' | 'RUNNING' | 'JUMPING' | 'DUCKING' | 'DEAD';
 
 /**
  * DinoPlayer Entity
@@ -13,14 +13,32 @@ export class DinoPlayer extends Entity {
   public static readonly JUMP_FORCE = 15.5;
   public static readonly FAST_DROP_FORCE = -8.5;
 
-  public pose: DinoPose = 'RUNNING';
+  public pose: DinoPose = 'IDLE';
   public runFrame: number = 0;
   public duckFrame: number = 0;
   private frameTimer: number = 0;
   public isDucking: boolean = false;
 
-  constructor(x: number = 50, y: number = 0) {
-    super('dino-player', x, y, 54, 58);
+  constructor(x: number = 40, y: number = 0) {
+    super('dino-player', x, y, 72, 56);
+    this.updateDimensions();
+  }
+
+  public updateDimensions(): void {
+    if (this.pose === 'DUCKING') {
+      this.width = 78;
+      this.height = 32;
+    } else if (this.pose === 'DEAD') {
+      this.width = 78;
+      this.height = 48;
+    } else if (this.pose === 'JUMPING') {
+      this.width = 64;
+      this.height = 54;
+    } else {
+      // RUNNING or IDLE
+      this.width = 72;
+      this.height = 56;
+    }
   }
 
   public update(dt: number): void {
@@ -41,13 +59,16 @@ export class DinoPlayer extends Entity {
     } else {
       this.pose = this.isDucking ? 'DUCKING' : 'RUNNING';
     }
+    this.updateDimensions();
 
-    // Smooth Animation Frame Stepping
-    this.frameTimer += dt * 0.016;
-    if (this.frameTimer >= 0.075) { // ~13 fps sprite frame swap for authentic retro cadence
-      this.frameTimer = 0;
-      this.runFrame = (this.runFrame + 1) % 4;
-      this.duckFrame = (this.duckFrame + 1) % 2;
+    // 9-Frame Animation cadence (~16 fps stepping for fluid cartoon sprint)
+    if (this.pose === 'RUNNING') {
+      this.frameTimer += dt * 0.016;
+      if (this.frameTimer >= 0.062) {
+        this.frameTimer = 0;
+        this.runFrame = (this.runFrame + 1) % 9;
+        this.duckFrame = (this.duckFrame + 1) % 2;
+      }
     }
   }
 
@@ -56,6 +77,7 @@ export class DinoPlayer extends Entity {
     if (this.y === DinoPlayer.GROUND_Y) {
       this.vy = DinoPlayer.JUMP_FORCE;
       this.pose = 'JUMPING';
+      this.updateDimensions();
       return true;
     }
     return false;
@@ -74,37 +96,40 @@ export class DinoPlayer extends Entity {
     } else if (this.y === DinoPlayer.GROUND_Y) {
       this.pose = 'RUNNING';
     }
+    this.updateDimensions();
   }
 
   public die(): void {
     this.pose = 'DEAD';
     this.vy = 0;
+    this.updateDimensions();
   }
 
   public override getHitbox(): Hitbox {
     if (this.pose === 'DUCKING') {
       return {
-        x: this.x + 4,
+        x: this.x + 8,
         y: this.y,
-        width: 60,
+        width: 58,
         height: 28,
       };
     }
-    // Standing / Jumping hitbox
+    // Standing / Jumping hitbox for Red T-Rex
     return {
-      x: this.x + 8,
+      x: this.x + 12,
       y: this.y + 4,
-      width: 38,
+      width: 46,
       height: 48,
     };
   }
 
-  public override reset(x: number = 50, y: number = 0): void {
+  public override reset(x: number = 40, y: number = 0): void {
     super.reset(x, y);
-    this.pose = 'RUNNING';
+    this.pose = 'IDLE';
     this.runFrame = 0;
     this.duckFrame = 0;
     this.frameTimer = 0;
     this.isDucking = false;
+    this.updateDimensions();
   }
 }

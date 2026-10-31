@@ -22,7 +22,8 @@ export type GameTheme =
   | '2048'
   | 'tictactoe'
   | 'connect4'
-  | 'tomandjerry';
+  | 'tomandjerry'
+  | 'pacman';
 
 export interface ThemedGameBackgroundProps {
   theme?: GameTheme;
@@ -242,8 +243,8 @@ const RetroPixelLandscape = memo(() => {
     <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
       {/* 1. Deep Midnight Cosmic Sky Gradient */}
       <LinearGradient
-        colors={['#04020C', '#09041A', '#160833', '#33084C', '#580A64']}
-        locations={[0, 0.25, 0.55, 0.78, 0.94]}
+        colors={['#070414', '#110729', '#220A45', '#3D0A5C', '#5E0D6B', '#240638']}
+        locations={[0, 0.22, 0.48, 0.72, 0.88, 1.0]}
         style={StyleSheet.absoluteFillObject}
       />
 
@@ -254,23 +255,23 @@ const RetroPixelLandscape = memo(() => {
             position: 'absolute',
             left: 0,
             right: 0,
-            bottom: '12%',
-            height: '24%',
+            bottom: '10%',
+            height: '26%',
           },
           glowStyle,
         ]}
       >
         <LinearGradient
-          colors={['transparent', 'rgba(192, 38, 211, 0.35)', 'rgba(236, 72, 153, 0.25)', 'transparent']}
-          locations={[0, 0.45, 0.65, 1]}
+          colors={['transparent', 'rgba(192, 38, 211, 0.45)', 'rgba(236, 72, 153, 0.35)', 'transparent']}
+          locations={[0, 0.4, 0.65, 1]}
           style={StyleSheet.absoluteFillObject}
         />
       </Animated.View>
 
       {/* 3. Drifting Night Pixel Clouds / Mist */}
-      <PixelCloud topPercent={16} width={140} height={28} duration={48000} delay={0} opacity={0.12} />
-      <PixelCloud topPercent={32} width={190} height={32} duration={62000} delay={15000} opacity={0.10} />
-      <PixelCloud topPercent={48} width={160} height={26} duration={52000} delay={8000} opacity={0.09} />
+      <PixelCloud topPercent={14} width={140} height={28} duration={48000} delay={0} opacity={0.15} />
+      <PixelCloud topPercent={28} width={190} height={32} duration={62000} delay={15000} opacity={0.12} />
+      <PixelCloud topPercent={42} width={160} height={26} duration={52000} delay={8000} opacity={0.11} />
 
       {/* 4. Blinking Star Field (Across the full sky) */}
       <BlinkingStarField />
@@ -281,26 +282,26 @@ const RetroPixelLandscape = memo(() => {
 
       {/* 6. Multi-Layer Retro Pixel Mountains (Pure Procedural Geometry - Zero Images!) */}
       {/* 6A. Distant Mountain Ridge (Deep Violet Silhouettes) */}
-      <View style={[styles.mountainLayer, { bottom: '5%', height: '22%' }]}>
-        <View style={[styles.mountainPeak, { left: '-5%', width: 180, height: 180, backgroundColor: '#1A0B33', transform: [{ rotate: '45deg' }, { scaleY: 1.3 }] }]} />
-        <View style={[styles.mountainPeak, { left: '10%', width: 140, height: 140, backgroundColor: '#180A2E', transform: [{ rotate: '45deg' }, { scaleY: 1.2 }] }]} />
-        <View style={[styles.mountainPeak, { left: '22%', width: 110, height: 110, backgroundColor: '#1E0D3A', transform: [{ rotate: '45deg' }, { scaleY: 1.1 }] }]} />
-        <View style={[styles.mountainPeak, { left: '38%', width: 95, height: 95, backgroundColor: '#16092B', transform: [{ rotate: '45deg' }, { scaleY: 1.0 }] }]} />
-        <View style={[styles.mountainPeak, { left: '48%', width: 105, height: 105, backgroundColor: '#190A30', transform: [{ rotate: '45deg' }, { scaleY: 1.05 }] }]} />
-        <View style={[styles.mountainPeak, { left: '60%', width: 150, height: 150, backgroundColor: '#1B0C35', transform: [{ rotate: '45deg' }, { scaleY: 1.25 }] }]} />
-        <View style={[styles.mountainPeak, { left: '72%', width: 190, height: 190, backgroundColor: '#1E0D3A', transform: [{ rotate: '45deg' }, { scaleY: 1.4 }] }]} />
-        <View style={[styles.mountainPeak, { left: '86%', width: 160, height: 160, backgroundColor: '#17092F', transform: [{ rotate: '45deg' }, { scaleY: 1.3 }] }]} />
+      <View style={[styles.mountainLayer, { bottom: '7%', height: '32%' }]}>
+        <View style={[styles.mountainPeak, { left: '-5%', width: 190, height: 190, backgroundColor: '#200D3D', transform: [{ rotate: '45deg' }, { scaleY: 1.35 }] }]} />
+        <View style={[styles.mountainPeak, { left: '10%', width: 150, height: 150, backgroundColor: '#1C0A35', transform: [{ rotate: '45deg' }, { scaleY: 1.25 }] }]} />
+        <View style={[styles.mountainPeak, { left: '22%', width: 120, height: 120, backgroundColor: '#240E44', transform: [{ rotate: '45deg' }, { scaleY: 1.15 }] }]} />
+        <View style={[styles.mountainPeak, { left: '38%', width: 105, height: 105, backgroundColor: '#1A0A32', transform: [{ rotate: '45deg' }, { scaleY: 1.05 }] }]} />
+        <View style={[styles.mountainPeak, { left: '48%', width: 115, height: 115, backgroundColor: '#1E0C38', transform: [{ rotate: '45deg' }, { scaleY: 1.1 }] }]} />
+        <View style={[styles.mountainPeak, { left: '60%', width: 160, height: 160, backgroundColor: '#200D3D', transform: [{ rotate: '45deg' }, { scaleY: 1.3 }] }]} />
+        <View style={[styles.mountainPeak, { left: '72%', width: 200, height: 200, backgroundColor: '#240E44', transform: [{ rotate: '45deg' }, { scaleY: 1.45 }] }]} />
+        <View style={[styles.mountainPeak, { left: '86%', width: 170, height: 170, backgroundColor: '#1B0A33', transform: [{ rotate: '45deg' }, { scaleY: 1.35 }] }]} />
       </View>
 
       {/* 6B. Mid Mountain Ridge (Darker Indigo with Violet Edge Highlights) */}
-      <View style={[styles.mountainLayer, { bottom: '2%', height: '18%' }]}>
-        <View style={[styles.mountainPeak, { left: '-2%', width: 160, height: 160, backgroundColor: '#120724', transform: [{ rotate: '45deg' }, { scaleY: 1.2 }] }]} />
-        <View style={[styles.mountainPeak, { left: '8%', width: 130, height: 130, backgroundColor: '#0F051F', transform: [{ rotate: '45deg' }, { scaleY: 1.15 }] }]} />
-        <View style={[styles.mountainPeak, { left: '28%', width: 90, height: 90, backgroundColor: '#0D041A', transform: [{ rotate: '45deg' }, { scaleY: 0.95 }] }]} />
-        <View style={[styles.mountainPeak, { left: '42%', width: 85, height: 85, backgroundColor: '#100520', transform: [{ rotate: '45deg' }, { scaleY: 0.9 }] }]} />
-        <View style={[styles.mountainPeak, { left: '55%', width: 110, height: 110, backgroundColor: '#0E041C', transform: [{ rotate: '45deg' }, { scaleY: 1.1 }] }]} />
-        <View style={[styles.mountainPeak, { left: '68%', width: 175, height: 175, backgroundColor: '#130726', transform: [{ rotate: '45deg' }, { scaleY: 1.35 }] }]} />
-        <View style={[styles.mountainPeak, { left: '82%', width: 145, height: 145, backgroundColor: '#100520', transform: [{ rotate: '45deg' }, { scaleY: 1.2 }] }]} />
+      <View style={[styles.mountainLayer, { bottom: '3%', height: '25%' }]}>
+        <View style={[styles.mountainPeak, { left: '-2%', width: 170, height: 170, backgroundColor: '#15082A', transform: [{ rotate: '45deg' }, { scaleY: 1.25 }] }]} />
+        <View style={[styles.mountainPeak, { left: '8%', width: 140, height: 140, backgroundColor: '#120623', transform: [{ rotate: '45deg' }, { scaleY: 1.2 }] }]} />
+        <View style={[styles.mountainPeak, { left: '28%', width: 100, height: 100, backgroundColor: '#10051F', transform: [{ rotate: '45deg' }, { scaleY: 1.0 }] }]} />
+        <View style={[styles.mountainPeak, { left: '42%', width: 95, height: 95, backgroundColor: '#130626', transform: [{ rotate: '45deg' }, { scaleY: 0.95 }] }]} />
+        <View style={[styles.mountainPeak, { left: '55%', width: 120, height: 120, backgroundColor: '#110521', transform: [{ rotate: '45deg' }, { scaleY: 1.15 }] }]} />
+        <View style={[styles.mountainPeak, { left: '68%', width: 185, height: 185, backgroundColor: '#16082C', transform: [{ rotate: '45deg' }, { scaleY: 1.4 }] }]} />
+        <View style={[styles.mountainPeak, { left: '82%', width: 155, height: 155, backgroundColor: '#130626', transform: [{ rotate: '45deg' }, { scaleY: 1.25 }] }]} />
       </View>
 
       {/* 6C. Foreground Base & Retro Horizontal Scanline Ground */}
@@ -309,9 +310,9 @@ const RetroPixelLandscape = memo(() => {
           colors={['transparent', '#080312', '#05020B']}
           style={StyleSheet.absoluteFillObject}
         />
-        <View style={{ position: 'absolute', bottom: 18, left: 0, right: 0, height: 1, backgroundColor: 'rgba(192, 38, 211, 0.18)' }} />
-        <View style={{ position: 'absolute', bottom: 12, left: 0, right: 0, height: 1, backgroundColor: 'rgba(168, 85, 247, 0.14)' }} />
-        <View style={{ position: 'absolute', bottom: 6, left: 0, right: 0, height: 2, backgroundColor: 'rgba(147, 51, 234, 0.22)' }} />
+        <View style={{ position: 'absolute', bottom: 18, left: 0, right: 0, height: 1, backgroundColor: 'rgba(192, 38, 211, 0.25)' }} />
+        <View style={{ position: 'absolute', bottom: 12, left: 0, right: 0, height: 1, backgroundColor: 'rgba(168, 85, 247, 0.20)' }} />
+        <View style={{ position: 'absolute', bottom: 6, left: 0, right: 0, height: 2, backgroundColor: 'rgba(147, 51, 234, 0.28)' }} />
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, backgroundColor: '#05020B' }} />
       </View>
     </View>
@@ -698,7 +699,8 @@ export const ThemedGameBackground: React.FC<ThemedGameBackgroundProps> = memo(({
           <>
             <RetroPixelLandscape />
             <LinearGradient
-              colors={['rgba(11, 9, 14, 0.4)', 'rgba(19, 15, 24, 0.3)', 'rgba(12, 10, 14, 0.75)']}
+              colors={['transparent', 'rgba(217, 119, 6, 0.08)', 'rgba(147, 51, 234, 0.12)']}
+              locations={[0, 0.6, 1]}
               style={StyleSheet.absoluteFillObject}
             />
             <BlinkingStarField />
@@ -839,23 +841,24 @@ export const ThemedGameBackground: React.FC<ThemedGameBackgroundProps> = memo(({
         );
 
       // -----------------------------------------------------------------------
-      // 10. TOM & JERRY — Retro Pixel Sky + Stealth Blueprint & Symbols
+      // 10. PAC-MAN / TOM & JERRY — Retro Arcade Maze Atmosphere
       // -----------------------------------------------------------------------
+      case 'pacman':
       case 'tomandjerry':
         return (
           <>
             <RetroPixelLandscape />
             <LinearGradient
-              colors={['rgba(8, 7, 16, 0.5)', 'rgba(13, 12, 25, 0.4)', 'rgba(8, 7, 16, 0.8)']}
+              colors={['rgba(2, 6, 23, 0.75)', 'rgba(10, 15, 30, 0.65)', 'rgba(2, 6, 23, 0.95)']}
               style={StyleSheet.absoluteFillObject}
             />
             <BlinkingStarField />
             <View style={[StyleSheet.absoluteFillObject, styles.mazeBlueprintOverlay]} />
-            <FloatingGlyph glyph="🧀" startX={18} startY={25} size={18} color="#F59E0B" floatY={-22} duration={7800} delay={0} />
-            <FloatingGlyph glyph="🐾" startX={78} startY={32} size={18} color="#C084FC" floatY={-26} duration={8500} delay={1500} />
-            <FloatingGlyph glyph="🐾" startX={25} startY={72} size={18} color="#C084FC" floatY={-24} duration={7200} delay={2800} />
-            <FloatingGlyph glyph="🧀" startX={72} startY={76} size={18} color="#F59E0B" floatY={-24} duration={9000} delay={800} />
-            <FloatingGlyph glyph="🐾" startX={52} startY={16} size={16} color="#C084FC" floatY={-18} duration={8200} delay={3600} />
+            <FloatingGlyph glyph="🟡" startX={18} startY={25} size={16} color="#FACC15" floatY={-22} duration={7800} delay={0} />
+            <FloatingGlyph glyph="👻" startX={78} startY={32} size={18} color="#EF4444" floatY={-26} duration={8500} delay={1500} />
+            <FloatingGlyph glyph="🍒" startX={25} startY={72} size={18} color="#F43F5E" floatY={-24} duration={7200} delay={2800} />
+            <FloatingGlyph glyph="👻" startX={72} startY={76} size={18} color="#06B6D4" floatY={-24} duration={9000} delay={800} />
+            <FloatingGlyph glyph="🟡" startX={52} startY={16} size={14} color="#FACC15" floatY={-18} duration={8200} delay={3600} />
           </>
         );
 
@@ -898,15 +901,12 @@ const styles = StyleSheet.create({
     } as any) : {}),
   },
   container: {
+    ...StyleSheet.absoluteFillObject,
     position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
     width: Platform.OS === 'web' ? ('100vw' as any) : '100%',
     height: Platform.OS === 'web' ? ('100vh' as any) : '100%',
     backgroundColor: '#09080E',
-    zIndex: -1,
+    zIndex: Platform.OS === 'web' ? -1 : 0,
     overflow: 'hidden',
   },
   mountainLayer: {

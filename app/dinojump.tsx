@@ -19,6 +19,7 @@ import { GameHeader } from '../src/components/GameHeader';
 import { GameOverModal } from '../src/components/GameOverModal';
 import { CyberBackground } from '../src/components/CyberBackground';
 import { tapLight, notifyError } from '../src/utils/haptics';
+import { playJumpSound, soundManager } from '../src/utils/sound';
 
 // Modular OOP Architecture imports
 import { DinoEngine, DinoEngineSnapshot } from '../src/engines/dino';
@@ -63,6 +64,7 @@ export default function DinoJump() {
     return () => {
       unsubscribe();
       if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
+      soundManager.unload();
     };
   }, [engine]);
 
@@ -126,8 +128,12 @@ export default function DinoJump() {
       setIsPaused(false);
       return;
     }
-    tapLight();
-    engine.jump();
+    const jumped = engine.jump();
+    if (jumped) {
+      playJumpSound();
+    } else {
+      tapLight();
+    }
     setGameState(engine.getState());
   }, [engine, gameState.gameOver, isPaused]);
 
@@ -228,11 +234,11 @@ export default function DinoJump() {
   }, [gameState.gameOver, gameState.gameStarted, handleJump, handleDuck, restartGame, togglePause]);
 
   const player = gameState?.player || {
-    x: 50,
+    x: 40,
     y: 0,
-    width: 54,
-    height: 58,
-    pose: 'RUNNING' as const,
+    width: 72,
+    height: 56,
+    pose: 'IDLE' as const,
     runFrame: 0,
     duckFrame: 0,
   };
@@ -251,6 +257,8 @@ export default function DinoJump() {
             {
               left: player.x,
               bottom: ROAD_HEIGHT + (player.y || 0),
+              width: player.width,
+              height: player.height,
             },
           ]}
         >
@@ -258,6 +266,8 @@ export default function DinoJump() {
             pose={player.pose}
             runFrame={player.runFrame}
             duckFrame={player.duckFrame}
+            width={player.width}
+            height={player.height}
           />
         </View>
 
@@ -340,8 +350,8 @@ export default function DinoJump() {
         {!gameState.gameStarted && !gameState.gameOver && (
           <View style={[StyleSheet.absoluteFill, styles.overlayCenter]} pointerEvents="box-none">
             <TouchableOpacity style={styles.startCard} onPress={handleJump} activeOpacity={0.85}>
-              <Text style={styles.messageText}>▶ TAP OR PRESS SPACE TO RUN</Text>
-              <Text style={styles.subMessageText}>SWIPE DOWN OR PRESS [S] TO DUCK</Text>
+              <Text style={styles.messageText}>▶ TAP ANYWHERE TO RUN</Text>
+              <Text style={styles.subMessageText}>SWIPE DOWN TO DUCK • [SPACE] / [S]</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -351,7 +361,7 @@ export default function DinoJump() {
           <View style={[StyleSheet.absoluteFill, styles.overlayCenter]} pointerEvents="box-none">
             <TouchableOpacity style={styles.startCard} onPress={togglePause} activeOpacity={0.85}>
               <Text style={styles.messageText}>PAUSED</Text>
-              <Text style={styles.subMessageText}>TAP TO RESUME</Text>
+              <Text style={styles.subMessageText}>TAP ANYWHERE TO RESUME</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -378,7 +388,7 @@ export default function DinoJump() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#07050E',
+    backgroundColor: 'transparent',
   },
   safe: {
     flex: 1,
@@ -391,8 +401,8 @@ const styles = StyleSheet.create({
   },
   playerContainer: {
     position: 'absolute',
-    width: 70,
-    height: 58,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
     zIndex: 15,
   },
   obstacleContainer: {
@@ -403,19 +413,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing[4],
-    paddingBottom: Spacing[3],
-    gap: Spacing[3],
+    paddingHorizontal: Spacing[3],
+    paddingTop: Spacing[1],
+    paddingBottom: Spacing[2],
+    gap: Spacing[2],
     zIndex: 50,
   },
   controlBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[2],
-    borderRadius: 4,
+    paddingHorizontal: Spacing[3],
+    paddingVertical: 7,
+    borderRadius: 6,
     borderWidth: 1,
-    gap: Spacing[2],
+    gap: 6,
   },
   controlBtnActive: {
     backgroundColor: 'rgba(0, 229, 255, 0.25)',
@@ -433,38 +444,45 @@ const styles = StyleSheet.create({
   controlBtnText: {
     fontFamily: Fonts.heading,
     fontSize: FontSize['2xs'],
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   overlayCenter: {
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 16,
     zIndex: 100,
   },
   startCard: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    width: '100%',
+    maxWidth: 310,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.35)',
-    backgroundColor: '#0E0D18',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 229, 255, 0.45)',
+    backgroundColor: 'rgba(14, 13, 24, 0.94)',
     alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
+    justifyContent: 'center',
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 6,
   },
   messageText: {
     fontFamily: Fonts.heading,
-    fontSize: FontSize.sm,
+    fontSize: FontSize.xs,
     color: '#00E5FF',
-    letterSpacing: 1.5,
+    letterSpacing: 0.8,
     marginBottom: 4,
+    textAlign: 'center',
   },
   subMessageText: {
-    fontFamily: Fonts.body,
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-    letterSpacing: 0.5,
+    fontFamily: Fonts.sans,
+    fontSize: FontSize['2xs'],
+    color: '#94A3B8',
+    letterSpacing: 0.4,
+    textAlign: 'center',
   },
 });

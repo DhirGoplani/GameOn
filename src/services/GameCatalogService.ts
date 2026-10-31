@@ -109,16 +109,16 @@ export class GameCatalogService {
         image: require('../../assets/images/icon_connect4.png'),
       },
       {
-        id: 'bingo',
-        title: 'Tom & Jerry',
-        subtitle: 'Gather cheese and outmaneuver Tom in the mansion.',
-        route: '/tomandjerry',
-        accent: '#A855F7',
-        category: 'action',
-        difficulty: 'HARD',
+        id: 'pacman',
+        title: 'Pac-Man',
+        subtitle: 'Chomp dots, outsmart ghosts, and master the arcade maze.',
+        route: '/pacman',
+        accent: '#FACC15',
+        category: 'arcade',
+        difficulty: 'MEDIUM',
         players: '1P',
-        highScoreKey: 'jerry_tom_hs',
-        image: require('../../assets/images/icon_tomandjerry.png'),
+        highScoreKey: 'pacman_high_score',
+        image: require('../../assets/images/icon_pacman.png'),
       },
       {
         id: 'sudoku',
@@ -166,6 +166,9 @@ export class GameCatalogService {
   }
 
   public getGameById(id: IconId): GameDefinition | undefined {
+    if (id === 'bingo') {
+      return this.catalog.get('pacman') || this.catalog.get(id);
+    }
     return this.catalog.get(id);
   }
 

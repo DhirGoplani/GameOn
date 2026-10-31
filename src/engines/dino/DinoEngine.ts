@@ -11,7 +11,7 @@ export interface DinoObstacleSnapshot {
   kind: ObstacleKind;
   variant?: CactusVariant;
   altitude?: BirdAltitude;
-  wingPhase?: 0 | 1;
+  wingPhase?: number;
 }
 
 export interface DinoEngineSnapshot {
@@ -58,7 +58,7 @@ export class DinoEngine extends BaseEngine<DinoEngineSnapshot> {
 
   constructor(initialHighScore: number = 0) {
     super(initialHighScore);
-    this.player = new DinoPlayer(50, 0);
+    this.player = new DinoPlayer(40, 0);
   }
 
   public getState(): DinoEngineSnapshot {
@@ -108,11 +108,13 @@ export class DinoEngine extends BaseEngine<DinoEngineSnapshot> {
     if (this.gameStarted) return;
     this.reset();
     this.gameStarted = true;
+    this.player.pose = 'RUNNING';
+    this.player.updateDimensions();
     this.notify();
   }
 
   public reset(): void {
-    this.player.reset(50, 0);
+    this.player.reset(40, 0);
     this.obstacles = [];
     this.speed = DinoEngine.BASE_SPEED;
     this.distance = 0;

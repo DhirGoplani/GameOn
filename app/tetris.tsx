@@ -374,7 +374,7 @@ export default function Tetris() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.bg.primary,
+    backgroundColor: 'transparent',
   },
   safe: {
     flex: 1,

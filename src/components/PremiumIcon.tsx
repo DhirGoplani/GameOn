@@ -17,6 +17,7 @@ export type IconId =
   | 'flappybird'
   | 'connect4'
   | 'bingo'
+  | 'pacman'
   | 'sudoku'
   | 'dinojump'
   | 'blockoduko';
@@ -36,7 +37,8 @@ const ICON_IMAGES: Record<IconId, ImageSourcePropType> = {
   tictactoe: require('../../assets/images/icon_tictactoe.png'),
   flappybird: require('../../assets/images/icon_flappybird.png'),
   connect4: require('../../assets/images/icon_connect4.png'),
-  bingo: require('../../assets/images/icon_tomandjerry.png'),
+  bingo: require('../../assets/images/icon_pacman.png'),
+  pacman: require('../../assets/images/icon_pacman.png'),
   sudoku: require('../../assets/images/icon_sudoku.png'),
   dinojump: require('../../assets/images/icon_dinojump.png'),
   blockoduko: require('../../assets/images/icon_blockoduko.png'),

@@ -32,14 +32,14 @@ export class CactusObstacle extends Obstacle {
   public readonly variant: CactusVariant;
 
   constructor(id: string, x: number, variant: CactusVariant = 'small') {
-    let width = 28;
+    let width = 32;
     let height = 44;
     if (variant === 'double') {
-      width = 52;
-      height = 44;
+      width = 58;
+      height = 54;
     } else if (variant === 'large') {
       width = 36;
-      height = 54;
+      height = 60;
     }
 
     super(id, x, 0, width, height);
@@ -48,9 +48,9 @@ export class CactusObstacle extends Obstacle {
 
   public override getHitbox(): Hitbox {
     return {
-      x: this.x + 6,
+      x: this.x + 4,
       y: this.y,
-      width: this.width - 12,
+      width: this.width - 8,
       height: this.height - 4,
     };
   }
@@ -65,13 +65,13 @@ export type BirdAltitude = 'low' | 'high';
 export class BirdObstacle extends Obstacle {
   public readonly kind: ObstacleKind = 'bird';
   public readonly altitude: BirdAltitude;
-  public wingPhase: 0 | 1 = 0;
+  public wingPhase: number = 0;
   private wingTimer: number = 0;
 
   constructor(id: string, x: number, altitude: BirdAltitude = 'low') {
     // low altitude requires jump; high altitude requires duck
     const y = altitude === 'high' ? 36 : 10;
-    super(id, x, y, 48, 32);
+    super(id, x, y, 54, 42);
     this.altitude = altitude;
   }
 
@@ -79,20 +79,20 @@ export class BirdObstacle extends Obstacle {
     // Birds glide slightly faster than ground speed
     super.update(dt, speed * 1.08);
 
-    // Flap wings smoothly
+    // Flap wings through 8-frame smooth aerodynamic cycle (~14 fps)
     this.wingTimer += dt * 0.016;
-    if (this.wingTimer >= 0.14) {
+    if (this.wingTimer >= 0.07) {
       this.wingTimer = 0;
-      this.wingPhase = this.wingPhase === 0 ? 1 : 0;
+      this.wingPhase = (this.wingPhase + 1) % 8;
     }
   }
 
   public override getHitbox(): Hitbox {
     return {
-      x: this.x + 8,
-      y: this.y + 6,
-      width: this.width - 16,
-      height: this.height - 12,
+      x: this.x + 6,
+      y: this.y + 4,
+      width: this.width - 12,
+      height: this.height - 8,
     };
   }
 }
