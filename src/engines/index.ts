@@ -23,6 +23,20 @@ export * from './FlappyBirdEngine';
 export * from './BlockodukoEngine';
 export * from './TomAndJerryEngine';
 export * from './PacmanEngine';
+export {
+  FlappyEngine,
+  BirdEntity,
+  PipePairEntity,
+  PipeObjectPool,
+  CloudObstacleEntity,
+  CloudObjectPool,
+} from './flappy';
+export type {
+  FlappySnapshot,
+  FlappyGameStatus,
+  PipeSnapshot,
+  CloudSnapshot,
+} from './flappy';
 
 export type GameEngineId =
   | 'tictactoe'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -27,42 +27,53 @@ import { GameHeader } from '../src/components/GameHeader';
 import { GameOverModal } from '../src/components/GameOverModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import { tapLight, notifyError, tapMedium } from '../src/utils/haptics';
+import {
+  playFlappyFlapSound,
+  playFlappyPointSound,
+  playFlappyHitSound,
+  playFlappyDieSound,
+} from '../src/utils/sound';
 import { useKeyboard, KeyboardKey } from '../src/hooks/useKeyboard';
 import { CyberBackground } from '../src/components/CyberBackground';
-import { FlappySprite } from '../src/components/flappy/FlappySprite';
 import { PipeSprite } from '../src/components/flappy/PipeSprite';
+import {
+  FlappyEngine,
+  PipeObjectPool,
+  CloudObjectPool,
+  CloudObstacleEntity,
+} from '../src/engines/flappy';
 
 // ── Theme & Dimensions ────────────────────────────────────────────────────────
 const ACCENT = '#00E5FF';
 const GROUND_TOP = '#1B3A22';
 const GROUND_BOT = '#1C110C';
 
-// Calibrated physics for ultra-smooth responsiveness
-const GRAVITY_BASE = 0.36;
-const JUMP_FORCE_BASE = -7.4;
-const PIPE_SPEED_BASE = 2.8;
-const PIPE_WIDTH = 66;
-const PIPE_GAP = 195;
-const PIPE_COUNT = 6;
-const ADJACENT_PIPE_SPACING = 235;
 const BIRD_SIZE = 56;
-const GROUND_H = 78;
+const GROUND_H = FlappyEngine.GROUND_HEIGHT;
+const PIPE_WIDTH = 66;
 
 const BUSH_IMG = require('../assets/images/flappy/bush.png');
+const CLOUD_IMG = require('../assets/images/flappy/cloud.png');
+const BIRD_WING_UP = require('../assets/images/flappy/bird_wing_up.png');
+const BIRD_WING_MID = require('../assets/images/flappy/bird_wing_mid.png');
+const BIRD_WING_DOWN = require('../assets/images/flappy/bird_wing_down.png');
+const BIRD_DEAD = require('../assets/images/flappy/bird_dead.png');
 
-// ── Bird Container driven by Reanimated SharedValues (Pure GPU Transforms) ───
+// ── Bird Container driven by Reanimated SharedValues (Pure GPU Transforms & Opacity) ───
 const BirdContainer = React.memo(({
   birdY,
   birdRot,
+  birdFrame,
   isDead,
   birdX,
 }: {
   birdY: SharedValue<number>;
   birdRot: SharedValue<number>;
+  birdFrame: SharedValue<number>;
   isDead: boolean;
   birdX: number;
 }) => {
-  const animatedStyle = useAnimatedStyle(() => ({
+  const animatedContainerStyle = useAnimatedStyle(() => ({
     position: 'absolute',
     left: birdX,
     top: 0,
@@ -75,27 +86,60 @@ const BirdContainer = React.memo(({
     ],
   }));
 
+  const wingUpStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+    opacity: !isDead && birdFrame.value === 0 ? 1 : 0,
+  }));
+
+  const wingMidStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+    opacity: !isDead && birdFrame.value === 1 ? 1 : 0,
+  }));
+
+  const wingDownStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+    opacity: !isDead && birdFrame.value === 2 ? 1 : 0,
+  }));
+
+  const deadStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+    opacity: isDead ? 1 : 0,
+  }));
+
   return (
-    <Animated.View style={animatedStyle} pointerEvents="none">
-      <FlappySprite size={BIRD_SIZE} isDead={isDead} />
+    <Animated.View style={animatedContainerStyle} pointerEvents="none">
+      <Animated.Image source={BIRD_WING_UP} style={wingUpStyle} />
+      <Animated.Image source={BIRD_WING_MID} style={wingMidStyle} />
+      <Animated.Image source={BIRD_WING_DOWN} style={wingDownStyle} />
+      <Animated.Image source={BIRD_DEAD} style={deadStyle} />
     </Animated.View>
   );
 });
 BirdContainer.displayName = 'BirdContainer';
 
-// ── Optimized Pipe Obstacle (Hardware-Accelerated Translation) ─────────────────
+// ── Pre-Baked Static Pipe Obstacle (Hardware-Accelerated Dual Matrix Translation) ─
 const AnimatedPipe = React.memo(
   ({
     xSV,
-    topHSV,
-    gapSV,
-    screenHeight,
+    topYSV,
+    bottomYSV,
     pipeWidth,
   }: {
     xSV: SharedValue<number>;
-    topHSV: SharedValue<number>;
-    gapSV: SharedValue<number>;
-    screenHeight: number;
+    topYSV: SharedValue<number>;
+    bottomYSV: SharedValue<number>;
     pipeWidth: number;
   }) => {
     const topPipeStyle = useAnimatedStyle(() => ({
@@ -103,19 +147,25 @@ const AnimatedPipe = React.memo(
       left: 0,
       top: 0,
       width: pipeWidth,
-      height: Math.max(0, topHSV.value),
+      height: 800,
       zIndex: 5,
-      transform: [{ translateX: xSV.value }],
+      transform: [
+        { translateX: xSV.value },
+        { translateY: topYSV.value },
+      ],
     }));
 
     const bottomPipeStyle = useAnimatedStyle(() => ({
       position: 'absolute',
       left: 0,
-      top: topHSV.value + gapSV.value,
+      top: 0,
       width: pipeWidth,
-      height: Math.max(0, screenHeight - (topHSV.value + gapSV.value) - GROUND_H),
+      height: 800,
       zIndex: 5,
-      transform: [{ translateX: xSV.value }],
+      transform: [
+        { translateX: xSV.value },
+        { translateY: bottomYSV.value },
+      ],
     }));
 
     return (
@@ -135,18 +185,47 @@ const AnimatedPipe = React.memo(
 );
 AnimatedPipe.displayName = 'AnimatedPipe';
 
+// ── Pre-Baked Floating Cloud Obstacle (Pure GPU Matrix Translation) ───────────
+const AnimatedCloudObstacle = React.memo(
+  ({
+    xSV,
+    ySV,
+  }: {
+    xSV: SharedValue<number>;
+    ySV: SharedValue<number>;
+  }) => {
+    const animatedStyle = useAnimatedStyle(() => ({
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      width: CloudObstacleEntity.DEFAULT_WIDTH,
+      height: CloudObstacleEntity.DEFAULT_HEIGHT,
+      zIndex: 8,
+      transform: [
+        { translateX: xSV.value },
+        { translateY: ySV.value },
+      ],
+    }));
+
+    return (
+      <Animated.View style={animatedStyle} pointerEvents="none">
+        <Image
+          source={CLOUD_IMG}
+          style={styles.cloudObstacle}
+          resizeMode="contain"
+        />
+      </Animated.View>
+    );
+  }
+);
+AnimatedCloudObstacle.displayName = 'AnimatedCloudObstacle';
+
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function FlappyBird() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
-  const scaleRatio = Math.min(windowHeight / 850, 1.1);
-  const GRAVITY = GRAVITY_BASE * scaleRatio;
-  const JUMP_FORCE = JUMP_FORCE_BASE * scaleRatio;
-  const PIPE_SPEED = PIPE_SPEED_BASE * Math.min(Math.max(windowWidth / 390, 0.95), 1.2);
-
-  const GAME_WIDTH = windowWidth;
-  const GAME_HEIGHT = windowHeight;
-  const BIRD_X_POS = Math.floor(Math.min(GAME_WIDTH * 0.24, 150));
+  // Instantiate OOP Flappy Engine
+  const engine = useMemo(() => new FlappyEngine(), []);
 
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
@@ -154,49 +233,46 @@ export default function FlappyBird() {
   const [gameStarted, setGameStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Physics driven on the UI thread
-  const birdY = useSharedValue(windowHeight * 0.42);
-  const velSV = useSharedValue(0);
-  const birdRot = useSharedValue(0);
+  const GAME_WIDTH = windowWidth;
+  const GAME_HEIGHT = windowHeight;
+  const BIRD_X_POS = Math.floor(Math.min(GAME_WIDTH * 0.24, 150));
 
-  // Reusable Pipe Pool
-  const pipeXs = useRef(Array.from({ length: PIPE_COUNT }, () => useSharedValue(3000))).current;
-  const pipeTopHs = useRef(Array.from({ length: PIPE_COUNT }, () => useSharedValue(windowHeight * 0.3))).current;
-  const pipeGaps = useRef(Array.from({ length: PIPE_COUNT }, () => useSharedValue(PIPE_GAP))).current;
+  // SharedValues for 100% GPU-accelerated rendering
+  const birdYSV = useSharedValue(windowHeight * 0.42);
+  const birdRotSV = useSharedValue(0);
+  const birdFrameSV = useSharedValue(1);
 
-  const gameOverRef = useRef(false);
-  const gameStartedRef = useRef(false);
-  const isPausedRef = useRef(false);
-  const scoreRef = useRef(0);
-  const highScoreRef = useRef(0);
+  // Pre-allocated Object Pool SharedValues (Static pipes & aerial clouds)
+  const pipeXSVs = useRef(Array.from({ length: PipeObjectPool.POOL_SIZE }, () => useSharedValue(3000))).current;
+  const pipeTopYSVs = useRef(Array.from({ length: PipeObjectPool.POOL_SIZE }, () => useSharedValue(-550))).current;
+  const pipeBottomYSVs = useRef(Array.from({ length: PipeObjectPool.POOL_SIZE }, () => useSharedValue(500))).current;
+
+  const cloudXSVs = useRef(Array.from({ length: CloudObjectPool.POOL_SIZE }, () => useSharedValue(3000))).current;
+  const cloudYSVs = useRef(Array.from({ length: CloudObjectPool.POOL_SIZE }, () => useSharedValue(200))).current;
+
   const gameLoopRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
 
+  // Synchronize engine dimensions on resize / rotation
   useEffect(() => {
-    gameOverRef.current = gameOver;
-    gameStartedRef.current = gameStarted;
-    isPausedRef.current = isPaused;
-  }, [gameOver, gameStarted, isPaused]);
-
-  useEffect(() => {
-    highScoreRef.current = highScore;
-  }, [highScore]);
-
-  useEffect(() => {
-    scoreRef.current = score;
-  }, [score]);
+    engine.setDimensions(windowWidth, windowHeight);
+  }, [engine, windowWidth, windowHeight]);
 
   // Load persistent high score
   useEffect(() => {
     AsyncStorage.getItem('flappy_hs').then((v) => {
-      if (v) setHighScore(parseInt(v, 10));
+      if (v) {
+        const hs = parseInt(v, 10);
+        setHighScore(hs);
+        engine.setHighScore(hs);
+      }
     });
-  }, []);
+  }, [engine]);
 
   // Idle hover animation when waiting to start
   useEffect(() => {
     if (!gameStarted && !gameOver) {
-      birdY.value = withRepeat(
+      birdYSV.value = withRepeat(
         withSequence(
           withTiming(windowHeight * 0.42 - 12, { duration: 420, easing: Easing.inOut(Easing.quad) }),
           withTiming(windowHeight * 0.42 + 12, { duration: 420, easing: Easing.inOut(Easing.quad) })
@@ -204,167 +280,110 @@ export default function FlappyBird() {
         -1,
         true
       );
-      birdRot.value = withTiming(0, { duration: 150 });
+      birdRotSV.value = withTiming(0, { duration: 150 });
+      birdFrameSV.value = 1;
     }
-  }, [gameStarted, gameOver, windowHeight, birdY, birdRot]);
+  }, [gameStarted, gameOver, windowHeight, birdYSV, birdRotSV, birdFrameSV]);
 
-  // Dynamic pipe heights
-  const randomTopH = useCallback(() => {
-    const minH = GAME_HEIGHT * 0.12;
-    const maxH = GAME_HEIGHT - GROUND_H - PIPE_GAP - GAME_HEIGHT * 0.12;
-    return minH + Math.random() * (maxH - minH);
-  }, [GAME_HEIGHT]);
-
-  const initPipes = useCallback(() => {
-    const leadIn = Math.max(GAME_WIDTH * 0.9, 480);
-    for (let i = 0; i < PIPE_COUNT; i++) {
-      pipeXs[i].value = leadIn + i * ADJACENT_PIPE_SPACING;
-      pipeGaps[i].value = PIPE_GAP;
-      pipeTopHs[i].value = randomTopH();
-    }
-  }, [GAME_WIDTH, pipeXs, pipeGaps, pipeTopHs, randomTopH]);
-
-  // Instantaneous Flap with 0ms Touch Latency
-  const doFlap = useCallback(() => {
-    cancelAnimation(birdY);
-    velSV.value = JUMP_FORCE;
-    birdRot.value = -22;
-    tapLight();
-  }, [JUMP_FORCE, birdY, velSV, birdRot]);
-
+  // High-performance flap trigger
   const jump = useCallback(() => {
-    if (gameOverRef.current || isPausedRef.current) return;
-    if (!gameStartedRef.current) {
-      initPipes();
+    if (engine.getStatus() === 'game_over' || isPaused) return;
+
+    const startedNow = engine.getStatus() === 'idle';
+    cancelAnimation(birdYSV);
+    engine.flap();
+
+    const bird = engine.getBird();
+    birdYSV.value = bird.y;
+    birdRotSV.value = bird.rotation;
+    birdFrameSV.value = bird.flapFrame;
+
+    // Trigger authentic airy wing flap audio + haptic
+    playFlappyFlapSound();
+
+    if (startedNow) {
       setGameStarted(true);
-      gameStartedRef.current = true;
-      doFlap();
       tapMedium();
-      return;
     }
-    doFlap();
-  }, [doFlap, initPipes]);
+  }, [engine, isPaused, birdYSV, birdRotSV, birdFrameSV]);
 
   const togglePause = useCallback(() => {
-    if (gameOverRef.current) return;
-    if (!gameStartedRef.current) {
+    if (engine.getStatus() === 'game_over') return;
+    if (engine.getStatus() === 'idle') {
       jump();
       return;
     }
-    setIsPaused((p) => !p);
+    engine.togglePause();
+    setIsPaused(engine.getStatus() === 'paused');
     tapLight();
-  }, [jump]);
+  }, [engine, jump]);
 
-  const onGameOver = useCallback(
-    (finalY: number) => {
-      if (gameOverRef.current) return;
-      gameOverRef.current = true;
-      setGameOver(true);
-      setGameStarted(false);
-      notifyError();
-
-      const s = scoreRef.current;
-      const hs = highScoreRef.current;
-      if (s > hs) {
-        setHighScore(s);
-        AsyncStorage.setItem('flappy_hs', s.toString());
-      }
-
-      // Smooth tumble rotation into ground
-      birdRot.value = withTiming(85, { duration: 320, easing: Easing.in(Easing.quad) });
-    },
-    [birdRot]
-  );
-
-  // ── High Performance Game Loop ──────────────────────────────────────────────
+  // ── High Performance Game Loop (OOP Entity Updates + Zero Garbage Allocation) ──
   const gameLoop = useCallback(
     (timestamp: number) => {
-      if (gameOverRef.current || !gameStartedRef.current || isPausedRef.current) {
+      if (engine.getStatus() !== 'playing') {
         if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
         lastTimeRef.current = null;
         return;
       }
 
-      // Delta time calculation clamped to avoid velocity spikes
       const dt = lastTimeRef.current
         ? Math.min((timestamp - lastTimeRef.current) / 16.67, 1.4)
-        : 1;
+        : 1.0;
       lastTimeRef.current = timestamp;
 
-      // Physics integration
-      const newVel = Math.min(11, velSV.value + GRAVITY * dt);
-      const newY = birdY.value + newVel * dt;
+      // 1. Advance OOP Engine physics
+      const { scored, gameOver: hit } = engine.tick(dt);
 
-      // Smooth rotation: snap up on jump, smooth continuous tilt when falling
-      if (newVel < 0) {
-        birdRot.value = Math.max(-24, birdRot.value - 6 * dt);
-      } else if (newVel < 2.0) {
-        birdRot.value = birdRot.value + (-4 - birdRot.value) * 0.14 * dt;
-      } else {
-        const diveTarget = Math.min(80, (newVel - 2.0) * 12);
-        birdRot.value = birdRot.value + (diveTarget - birdRot.value) * 0.16 * dt;
+      // 2. Direct GPU SharedValue synchronization
+      const bird = engine.getBird();
+      birdYSV.value = bird.y;
+      birdRotSV.value = bird.rotation;
+      birdFrameSV.value = bird.flapFrame;
+
+      const pipes = engine.getPipePool().getEntities();
+      for (let i = 0; i < pipes.length; i++) {
+        pipeXSVs[i].value = pipes[i].x;
+        pipeTopYSVs[i].value = pipes[i].topTranslateY;
+        pipeBottomYSVs[i].value = pipes[i].bottomTranslateY;
       }
 
-      const floorLimit = GAME_HEIGHT - GROUND_H - BIRD_SIZE;
-      if (newY < 0 || newY > floorLimit) {
-        birdY.value = Math.min(newY, floorLimit);
-        onGameOver(newY);
-        return;
+      const clouds = engine.getCloudPool().getEntities();
+      for (let i = 0; i < clouds.length; i++) {
+        cloudXSVs[i].value = clouds[i].x;
+        cloudYSVs[i].value = clouds[i].y;
       }
 
-      velSV.value = newVel;
-      birdY.value = newY;
-
-      let passedCount = 0;
-
-      for (let i = 0; i < PIPE_COUNT; i++) {
-        const pX = pipeXs[i].value - PIPE_SPEED * dt;
-        const pTopH = pipeTopHs[i].value;
-        const pGap = pipeGaps[i].value;
-
-        // Calibrated hit-box collision for larger 56px bird
-        if (
-          BIRD_X_POS + BIRD_SIZE - 10 > pX + 4 &&
-          BIRD_X_POS + 10 < pX + PIPE_WIDTH - 4 &&
-          (newY + 8 < pTopH || newY + BIRD_SIZE - 8 > pTopH + pGap)
-        ) {
-          onGameOver(newY);
-          return;
-        }
-
-        // Passed pipe scoring
-        if (
-          pX + PIPE_WIDTH < BIRD_X_POS &&
-          pX + PIPE_WIDTH + PIPE_SPEED * dt >= BIRD_X_POS
-        ) {
-          passedCount++;
-        }
-
-        // Recycle pipe when well off-screen left
-        if (pX < -PIPE_WIDTH - 20) {
-          let maxX = -Infinity;
-          for (let j = 0; j < PIPE_COUNT; j++) {
-            if (pipeXs[j].value > maxX) maxX = pipeXs[j].value;
-          }
-          const randJitter = (Math.random() - 0.5) * 16;
-          pipeXs[i].value = maxX + ADJACENT_PIPE_SPACING + randJitter;
-          pipeGaps[i].value = PIPE_GAP;
-          pipeTopHs[i].value = randomTopH();
-        } else {
-          pipeXs[i].value = pX;
-        }
-      }
-
-      if (passedCount > 0) {
-        const newScore = scoreRef.current + passedCount;
-        scoreRef.current = newScore;
-        setScore(newScore);
+      // 3. Low-frequency event triggers (Only run when scoring or hitting)
+      if (scored) {
+        setScore(engine.getScore());
         tapMedium();
+        playFlappyPointSound();
+      }
+
+      if (hit) {
+        setGameOver(true);
+        setGameStarted(false);
+        notifyError();
+        playFlappyHitSound();
+        setTimeout(() => {
+          playFlappyDieSound();
+        }, 90);
+
+        const s = engine.getScore();
+        const hs = engine.getHighScore();
+        if (s > hs) {
+          setHighScore(s);
+          AsyncStorage.setItem('flappy_hs', s.toString());
+        }
+
+        birdRotSV.value = withTiming(85, { duration: 320, easing: Easing.in(Easing.quad) });
+        return;
       }
 
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     },
-    [GRAVITY, PIPE_SPEED, GAME_HEIGHT, BIRD_X_POS, randomTopH, onGameOver, birdY, birdRot, velSV, pipeXs, pipeTopHs, pipeGaps]
+    [engine, birdYSV, birdRotSV, birdFrameSV, pipeXSVs, pipeTopYSVs, pipeBottomYSVs, cloudXSVs, cloudYSVs]
   );
 
   useEffect(() => {
@@ -378,23 +397,25 @@ export default function FlappyBird() {
   }, [gameStarted, gameOver, isPaused, gameLoop]);
 
   const restart = useCallback(() => {
-    birdY.value = windowHeight * 0.42;
-    velSV.value = 0;
-    birdRot.value = 0;
-    scoreRef.current = 0;
-    gameOverRef.current = false;
-    gameStartedRef.current = false;
-    lastTimeRef.current = null;
+    engine.reset();
+    birdYSV.value = windowHeight * 0.42;
+    birdRotSV.value = 0;
+    birdFrameSV.value = 1;
 
-    for (let i = 0; i < PIPE_COUNT; i++) {
-      pipeXs[i].value = 3000;
+    for (let i = 0; i < PipeObjectPool.POOL_SIZE; i++) {
+      pipeXSVs[i].value = 3000;
+    }
+
+    for (let i = 0; i < CloudObjectPool.POOL_SIZE; i++) {
+      cloudXSVs[i].value = 3000;
     }
 
     setScore(0);
     setGameOver(false);
     setGameStarted(false);
     setIsPaused(false);
-  }, [windowHeight, birdY, velSV, birdRot, pipeXs]);
+    lastTimeRef.current = null;
+  }, [engine, windowHeight, birdYSV, birdRotSV, birdFrameSV, pipeXSVs, cloudXSVs]);
 
   // Keyboard controls
   useKeyboard(
@@ -420,7 +441,7 @@ export default function FlappyBird() {
       <CyberBackground theme="flappy" />
 
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={[styles.gameplayArea, { width: GAME_WIDTH, height: GAME_HEIGHT }]}>
+        <View style={[styles.gameplayArea, { width: GAME_WIDTH }]}>
           <GameHeader
             title="FLAPPY BIRD"
             category="ARCADE"
@@ -433,22 +454,31 @@ export default function FlappyBird() {
             }}
           />
 
-          {/* Pipes */}
-          {pipeXs.map((xSV, i) => (
+          {/* Pre-Baked Static Pipe Obstacles (From Object Pool) */}
+          {pipeXSVs.map((xSV, i) => (
             <AnimatedPipe
-              key={i}
+              key={`pipe_pool_${i}`}
               xSV={xSV}
-              topHSV={pipeTopHs[i]}
-              gapSV={pipeGaps[i]}
-              screenHeight={windowHeight}
+              topYSV={pipeTopYSVs[i]}
+              bottomYSV={pipeBottomYSVs[i]}
               pipeWidth={PIPE_WIDTH}
             />
           ))}
 
-          {/* Yellow Animated Bird */}
+          {/* Aerial Cloud Obstacles (From Object Pool - Interleaved between Pipes) */}
+          {cloudXSVs.map((xSV, i) => (
+            <AnimatedCloudObstacle
+              key={`cloud_pool_${i}`}
+              xSV={xSV}
+              ySV={cloudYSVs[i]}
+            />
+          ))}
+
+          {/* Yellow Animated Bird (Pure GPU Opacity Layers) */}
           <BirdContainer
-            birdY={birdY}
-            birdRot={birdRot}
+            birdY={birdYSV}
+            birdRot={birdRotSV}
+            birdFrame={birdFrameSV}
             isDead={gameOver}
             birdX={BIRD_X_POS}
           />
@@ -539,9 +569,9 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   gameplayArea: {
+    flex: 1,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -671,5 +701,10 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
     letterSpacing: 2,
+  },
+  cloudObstacle: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.96,
   },
 });

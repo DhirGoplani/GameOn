@@ -19,7 +19,13 @@ import { GameHeader } from '../src/components/GameHeader';
 import { GameOverModal } from '../src/components/GameOverModal';
 import { CyberBackground } from '../src/components/CyberBackground';
 import { tapLight, notifyError } from '../src/utils/haptics';
-import { playJumpSound, soundManager } from '../src/utils/sound';
+import {
+  playJumpSound,
+  playFlappyHitSound,
+  playFlappyDieSound,
+  playMilestoneSound,
+  soundManager,
+} from '../src/utils/sound';
 
 // Modular OOP Architecture imports
 import { DinoEngine, DinoEngineSnapshot } from '../src/engines/dino';
@@ -68,9 +74,15 @@ export default function DinoJump() {
     };
   }, [engine]);
 
+  const prevScoreRef = useRef(0);
+
   // Handle Game Over
   const handleGameOver = useCallback(() => {
     notifyError();
+    playFlappyHitSound();
+    setTimeout(() => {
+      playFlappyDieSound();
+    }, 90);
     const currentScore = engine.getScore();
     if (currentScore > highScore) {
       setHighScore(currentScore);
@@ -96,7 +108,16 @@ export default function DinoJump() {
 
       // Polymorphic Entity physics & collision tick
       const collided = engine.tick(dt, windowWidth);
-      setGameState(engine.getState());
+      const snapshot = engine.getState();
+      setGameState(snapshot);
+
+      // Milestone audio chime on every 100 points
+      const prevHundred = Math.floor(prevScoreRef.current / 100);
+      const curHundred = Math.floor(snapshot.score / 100);
+      if (curHundred > prevHundred && curHundred > 0) {
+        playMilestoneSound();
+      }
+      prevScoreRef.current = snapshot.score;
 
       if (collided) {
         handleGameOver();

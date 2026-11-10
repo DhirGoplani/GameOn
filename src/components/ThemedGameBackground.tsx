@@ -683,11 +683,6 @@ export const ThemedGameBackground: React.FC<ThemedGameBackgroundProps> = memo(({
               colors={['rgba(6, 7, 18, 0.4)', 'rgba(9, 13, 32, 0.3)', 'rgba(7, 9, 20, 0.75)']}
               style={StyleSheet.absoluteFillObject}
             />
-            <BlinkingStarField />
-            <PixelCloud topPercent={14} width={130} height={32} duration={38000} delay={0} opacity={0.16} />
-            <PixelCloud topPercent={26} width={180} height={40} duration={48000} delay={12000} opacity={0.14} />
-            <PixelCloud topPercent={8} width={110} height={26} duration={32000} delay={20000} opacity={0.12} />
-            <PixelCloud topPercent={38} width={150} height={34} duration={44000} delay={6000} opacity={0.13} />
           </>
         );
 

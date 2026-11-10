@@ -37,7 +37,7 @@ PipeSprite.displayName = 'PipeSprite';
 
 const styles = StyleSheet.create({
   container: {
-    height: '100%',
+    height: 800,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -45,6 +45,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     width: '100%',
-    height: 850,
+    height: 800,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
 const BIRD_WING_UP = require('../../../assets/images/flappy/bird_wing_up.png');
@@ -9,37 +9,35 @@ const BIRD_DEAD = require('../../../assets/images/flappy/bird_dead.png');
 interface FlappySpriteProps {
   size?: number;
   isDead?: boolean;
+  frameIndex?: number;
 }
 
+/**
+ * High-Performance Pure Presentational Bird Sprite
+ * Pre-decoded stacked image layers with zero internal timers or React state.
+ * Frame is driven directly by the OOP BirdEntity kinematics.
+ */
 export const FlappySprite: React.FC<FlappySpriteProps> = React.memo(({
   size = 56,
   isDead = false,
+  frameIndex = 1,
 }) => {
-  const [frame, setFrame] = useState(1);
-
-  // Smooth, self-contained flap cycle that never re-renders the parent game loop
-  useEffect(() => {
-    if (isDead) return;
-    const interval = setInterval(() => {
-      setFrame((prev) => (prev + 1) % 3);
-    }, 115);
-    return () => clearInterval(interval);
-  }, [isDead]);
+  const activeFrame = isDead ? -1 : Math.max(0, Math.min(2, frameIndex));
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       {/* 4 pre-decoded stacked layers with zero-overhead GPU opacity switching */}
       <Image
         source={BIRD_WING_UP}
-        style={[styles.img, { opacity: !isDead && frame === 0 ? 1 : 0 }]}
+        style={[styles.img, { opacity: !isDead && activeFrame === 0 ? 1 : 0 }]}
       />
       <Image
         source={BIRD_WING_MID}
-        style={[styles.img, { opacity: !isDead && frame === 1 ? 1 : 0 }]}
+        style={[styles.img, { opacity: !isDead && activeFrame === 1 ? 1 : 0 }]}
       />
       <Image
         source={BIRD_WING_DOWN}
-        style={[styles.img, { opacity: !isDead && frame === 2 ? 1 : 0 }]}
+        style={[styles.img, { opacity: !isDead && activeFrame === 2 ? 1 : 0 }]}
       />
       <Image
         source={BIRD_DEAD}
@@ -64,3 +62,4 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
 });
+
