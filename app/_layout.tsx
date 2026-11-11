@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, Platform, StyleSheet } from 'react-native';
+import { View, Platform, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -10,10 +10,10 @@ import {
   PressStart2P_400Regular 
 } from '@expo-google-fonts/press-start-2p';
 import * as SplashScreen from 'expo-splash-screen';
-import { Colors } from '../src/theme/colors';
+import { GameOnSplash } from '../src/components/GameOnSplash';
 
-// Prevent splash screen from auto-hiding before asset loading is complete
-SplashScreen.preventAutoHideAsync().catch(() => {});
+// Immediately unlock and hide any native splash screen to prevent hanging
+SplashScreen.hideAsync().catch(() => {});
 
 const GameOnDarkTheme = {
   ...DarkTheme,
@@ -28,40 +28,27 @@ const GameOnDarkTheme = {
 };
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
+  const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
   });
-  const [isReady, setIsReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    // Instant dark background on web DOM to prevent any white flash
+    // Hide native splash screen immediately so Expo Go NEVER hangs
+    SplashScreen.hideAsync().catch(() => {});
+
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       document.documentElement.style.backgroundColor = '#09080E';
       document.body.style.backgroundColor = '#09080E';
     }
 
-    // Maximum 1.2s timeout to ensure the app NEVER hangs on startup
+    // Hard fallback: intro splash always dismisses after 1.6s
     const timer = setTimeout(() => {
-      setIsReady(true);
-      SplashScreen.hideAsync().catch(() => {});
-    }, 1200);
-
-    if (loaded || error) {
-      setIsReady(true);
-      SplashScreen.hideAsync().catch(() => {});
-      clearTimeout(timer);
-    }
+      setShowSplash(false);
+    }, 1600);
 
     return () => clearTimeout(timer);
-  }, [loaded, error]);
-
-  if (!isReady) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#09080E', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={Colors.accent.primary} />
-      </View>
-    );
-  }
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#09080E' }}>
@@ -78,6 +65,9 @@ export default function RootLayout() {
               animationDuration: 180,
             }}
           />
+          {showSplash && (
+            <GameOnSplash onFinish={() => setShowSplash(false)} />
+          )}
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

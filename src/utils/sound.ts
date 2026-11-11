@@ -12,6 +12,7 @@ const FLAPPY_POINT_ASSET = require('../../assets/sounds/flappy_point.wav');
 const FLAPPY_HIT_ASSET = require('../../assets/sounds/flappy_hit.wav');
 const FLAPPY_DIE_ASSET = require('../../assets/sounds/flappy_die.wav');
 const ARCADE_MILESTONE_ASSET = require('../../assets/sounds/arcade_milestone.wav');
+const LOBBY_THEME_ASSET = require('../../assets/sounds/lobby_theme.wav');
 
 /**
  * SoundManager (Singleton Pattern)
@@ -30,6 +31,9 @@ export class SoundManager {
   private flappyHitSound: Audio.Sound | null = null;
   private flappyDieSound: Audio.Sound | null = null;
   private milestoneSound: Audio.Sound | null = null;
+  private lobbyMusicSound: Audio.Sound | null = null;
+  private isMusicMuted: boolean = false;
+  private isLobbyMusicPlaying: boolean = false;
 
   private lastWakaTime: number = 0;
   private lastFlapTime: number = 0;
@@ -332,8 +336,97 @@ export class SoundManager {
     } catch (_) {}
   }
 
+  /**
+   * Play the atmospheric 8-bit retro chiptune theme in the main lobby.
+   */
+  public async playLobbyMusic(): Promise<void> {
+    if (this.isMusicMuted) return;
+
+    try {
+      if (this.lobbyMusicSound) {
+        const status = await this.lobbyMusicSound.getStatusAsync();
+        if (status.isLoaded) {
+          if (!status.isPlaying) {
+            await this.lobbyMusicSound.playAsync();
+          }
+          this.isLobbyMusicPlaying = true;
+          return;
+        }
+      }
+
+      const { sound } = await Audio.Sound.createAsync(
+        LOBBY_THEME_ASSET,
+        {
+          shouldPlay: true,
+          isLooping: true,
+          volume: 0.55,
+        }
+      );
+      this.lobbyMusicSound = sound;
+      this.isLobbyMusicPlaying = true;
+    } catch (_) {}
+  }
+
+  /**
+   * Pause the lobby music (e.g. when entering a game).
+   */
+  public async pauseLobbyMusic(): Promise<void> {
+    try {
+      if (this.lobbyMusicSound) {
+        const status = await this.lobbyMusicSound.getStatusAsync();
+        if (status.isLoaded && status.isPlaying) {
+          await this.lobbyMusicSound.pauseAsync();
+        }
+      }
+      this.isLobbyMusicPlaying = false;
+    } catch (_) {}
+  }
+
+  /**
+   * Stop the lobby music.
+   */
+  public async stopLobbyMusic(): Promise<void> {
+    try {
+      if (this.lobbyMusicSound) {
+        await this.lobbyMusicSound.stopAsync();
+      }
+      this.isLobbyMusicPlaying = false;
+    } catch (_) {}
+  }
+
+  /**
+   * Toggle music mute status.
+   */
+  public async toggleMusicMute(): Promise<boolean> {
+    this.isMusicMuted = !this.isMusicMuted;
+    if (this.isMusicMuted) {
+      await this.pauseLobbyMusic();
+    } else {
+      await this.playLobbyMusic();
+    }
+    return this.isMusicMuted;
+  }
+
+  public isMuted(): boolean {
+    return this.isMusicMuted;
+  }
+
+  public setMuted(muted: boolean): void {
+    this.isMusicMuted = muted;
+    if (muted) {
+      this.pauseLobbyMusic();
+    } else {
+      this.playLobbyMusic();
+    }
+  }
+
   public async unload(): Promise<void> {
     try {
+      if (this.lobbyMusicSound) {
+        await this.lobbyMusicSound.unloadAsync();
+        this.lobbyMusicSound = null;
+        this.isLobbyMusicPlaying = false;
+      }
       if (this.jumpSound) {
         await this.jumpSound.unloadAsync();
         this.jumpSound = null;
@@ -415,4 +508,24 @@ export function playFlappyDieSound() {
 
 export function playMilestoneSound() {
   soundManager.playMilestone();
+}
+
+export function playLobbyMusic() {
+  soundManager.playLobbyMusic();
+}
+
+export function pauseLobbyMusic() {
+  soundManager.pauseLobbyMusic();
+}
+
+export function stopLobbyMusic() {
+  soundManager.stopLobbyMusic();
+}
+
+export function toggleLobbyMusic(): Promise<boolean> {
+  return soundManager.toggleMusicMute();
+}
+
+export function isLobbyMusicMuted(): boolean {
+  return soundManager.isMuted();
 }

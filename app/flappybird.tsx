@@ -232,6 +232,7 @@ export default function FlappyBird() {
   const [gameOver, setGameOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(115);
 
   const GAME_WIDTH = windowWidth;
   const GAME_HEIGHT = windowHeight;
@@ -442,17 +443,22 @@ export default function FlappyBird() {
 
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={[styles.gameplayArea, { width: GAME_WIDTH }]}>
-          <GameHeader
-            title="FLAPPY BIRD"
-            category="ARCADE"
-            score={score}
-            highScore={highScore}
-            accentColor={ACCENT}
-            onBack={() => {
-              setGameOver(true);
-              router.replace('/');
-            }}
-          />
+          <View
+            onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
+            style={styles.headerWrapper}
+          >
+            <GameHeader
+              title="FLAPPY BIRD"
+              category="ARCADE"
+              score={score}
+              highScore={highScore}
+              accentColor={ACCENT}
+              onBack={() => {
+                setGameOver(true);
+                router.replace('/');
+              }}
+            />
+          </View>
 
           {/* Pre-Baked Static Pipe Obstacles (From Object Pool) */}
           {pipeXSVs.map((xSV, i) => (
@@ -528,9 +534,15 @@ export default function FlappyBird() {
             </View>
           )}
 
-          {/* In-Game Score HUD */}
+          {/* In-Game Score HUD — Dynamically positioned below the frame */}
           {gameStarted && !gameOver && !isPaused && (
-            <View style={styles.liveScore} pointerEvents="none">
+            <View
+              style={[
+                styles.liveScore,
+                { top: Math.max(headerHeight + 16, 120) },
+              ]}
+              pointerEvents="none"
+            >
               <Text style={styles.liveScoreText}>{score}</Text>
             </View>
           )}
@@ -687,9 +699,12 @@ const styles = StyleSheet.create({
     color: '#00E5FF',
     letterSpacing: 2,
   },
+  headerWrapper: {
+    width: '100%',
+    zIndex: 100,
+  },
   liveScore: {
     position: 'absolute',
-    top: 85,
     alignSelf: 'center',
     zIndex: 20,
   },

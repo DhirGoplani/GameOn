@@ -12,3 +12,4 @@ export * from './PremiumIcon';
 export * from './CyberBackground';
 export * from './AnimatedBackground';
 export * from './ThemedGameBackground';
+export * from './GameOnSplash';

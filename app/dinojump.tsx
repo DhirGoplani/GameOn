@@ -23,7 +23,6 @@ import {
   playJumpSound,
   playFlappyHitSound,
   playFlappyDieSound,
-  playMilestoneSound,
   soundManager,
 } from '../src/utils/sound';
 
@@ -74,8 +73,6 @@ export default function DinoJump() {
     };
   }, [engine]);
 
-  const prevScoreRef = useRef(0);
-
   // Handle Game Over
   const handleGameOver = useCallback(() => {
     notifyError();
@@ -110,14 +107,6 @@ export default function DinoJump() {
       const collided = engine.tick(dt, windowWidth);
       const snapshot = engine.getState();
       setGameState(snapshot);
-
-      // Milestone audio chime on every 100 points
-      const prevHundred = Math.floor(prevScoreRef.current / 100);
-      const curHundred = Math.floor(snapshot.score / 100);
-      if (curHundred > prevHundred && curHundred > 0) {
-        playMilestoneSound();
-      }
-      prevScoreRef.current = snapshot.score;
 
       if (collided) {
         handleGameOver();

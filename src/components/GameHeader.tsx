@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.pixel,
     fontSize: 9,
     color: '#CBD5E1',
-    letterSpacing: 1,
+    includeFontPadding: false,
   },
   helpButton: {
     flexDirection: 'row',
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.pixel,
     fontSize: 8,
     color: '#C4B5FD',
-    letterSpacing: 0.8,
+    includeFontPadding: false,
   },
   // ── Center: Title & Category Badge ──────────────────────────────────────────
   centerSection: {
@@ -313,9 +313,9 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontFamily: Fonts.pixel,
-    fontSize: 14.5,
+    fontSize: 13,
     color: '#FFFFFF',
-    letterSpacing: 1.8,
+    includeFontPadding: false,
     textShadowColor: 'rgba(167, 139, 250, 0.60)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.pixel,
     fontSize: 7.5,
     color: '#C4B5FD',
-    letterSpacing: 0.8,
+    includeFontPadding: false,
   },
   // ── Right: Scores & Actions ─────────────────────────────────────────────────
   rightSection: {
@@ -366,15 +366,15 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.pixel,
     fontSize: 7.5,
     color: '#94A3B8',
-    letterSpacing: 0.8,
+    includeFontPadding: false,
   },
   highScoreLabel: {
     color: '#FBBF24',
   },
   scoreValue: {
     fontFamily: Fonts.pixel,
-    fontSize: 10,
-    letterSpacing: 0.8,
+    fontSize: 9.5,
+    includeFontPadding: false,
   },
   // ── Mobile Score Row ────────────────────────────────────────────────────────
   mobileScoreRow: {

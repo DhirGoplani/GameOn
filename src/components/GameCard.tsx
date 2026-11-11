@@ -142,7 +142,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </View>
 
             <Animated.View style={[styles.actionButton, buttonAnimatedStyle]}>
-              <Text style={styles.actionButtonText}>PLAY ▶</Text>
+              <Text style={styles.actionButtonText} numberOfLines={1}>PLAY ▶</Text>
             </Animated.View>
           </View>
         </Animated.View>
@@ -204,9 +204,9 @@ const styles = StyleSheet.create({
   },
   gameTitle: {
     fontFamily: Fonts.pixel,
-    fontSize: 10.5,
+    fontSize: 10,
     color: '#F4F4F5',
-    letterSpacing: 0.8,
+    includeFontPadding: false,
   },
   metaWrapper: {
     height: 16,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.pixel,
     fontSize: 7.5,
     color: '#8E8D9F',
-    letterSpacing: 0.6,
+    includeFontPadding: false,
   },
   actionButton: {
     width: '100%',
@@ -231,8 +231,8 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontFamily: Fonts.pixel,
-    fontSize: 8.5,
+    fontSize: 9,
     color: '#E2E8F0',
-    letterSpacing: 0.8,
+    includeFontPadding: false,
   },
 });

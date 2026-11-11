@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../src/theme/colors';
@@ -17,6 +18,13 @@ import { ThemedGameBackground } from '../src/components/ThemedGameBackground';
 import { GameCard } from '../src/components/GameCard';
 import { GameCatalogService, GameDefinition } from '../src/services/GameCatalogService';
 import { LinearGradient } from 'expo-linear-gradient';
+import {
+  playLobbyMusic,
+  pauseLobbyMusic,
+  toggleLobbyMusic,
+  isLobbyMusicMuted,
+} from '../src/utils/sound';
+import { tapLight } from '../src/utils/haptics';
 
 const CATEGORIES = ['ALL', 'ARCADE', 'PUZZLE', 'BOARD', 'ACTION'] as const;
 type CategoryTab = typeof CATEGORIES[number];
@@ -27,7 +35,25 @@ export default function Home() {
   const allGames = useMemo(() => GameCatalogService.getInstance().getAllGames(), []);
   const [activeCategory, setActiveCategory] = useState<CategoryTab>('ALL');
   const [highScores, setHighScores] = useState<Record<string, number>>({});
+  const [isMuted, setIsMuted] = useState(isLobbyMusicMuted());
   const { width } = useWindowDimensions();
+
+  // Play retro lobby soundtrack when lobby is focused; pause when navigating away
+  useFocusEffect(
+    useCallback(() => {
+      playLobbyMusic();
+      setIsMuted(isLobbyMusicMuted());
+      return () => {
+        pauseLobbyMusic();
+      };
+    }, [])
+  );
+
+  const handleToggleSound = useCallback(async () => {
+    tapLight();
+    const muted = await toggleLobbyMusic();
+    setIsMuted(muted);
+  }, []);
 
   // Load persistent high scores
   useEffect(() => {
@@ -73,14 +99,38 @@ export default function Home() {
     <View style={styles.root}>
       <ThemedGameBackground theme="arcade" />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        {/* Top Navbar — Pure Centered GAMEON Marquee */}
+        {/* Top Navbar — Pure Centered GAMEON Marquee with Audio Toggle */}
         <View style={[styles.navbarOuter, { paddingHorizontal: HORIZONTAL_PAD }]}>
           <View style={[styles.navbarInner, { maxWidth: CONTENT_MAX_W }]}>
             <View style={styles.brandGroup}>
               <View style={styles.logoBadge}>
-                <Text style={styles.logoText}>GAMEON</Text>
+                <Text style={styles.logoText} numberOfLines={1}>
+                  GAMEON
+                </Text>
               </View>
             </View>
+
+            {/* Retro Lobby BGM Sound Toggle Button */}
+            <Pressable
+              onPress={handleToggleSound}
+              style={({ pressed }) => [
+                styles.soundToggleBtn,
+                pressed && styles.soundToggleBtnPressed,
+              ]}
+              hitSlop={8}
+            >
+              <Ionicons
+                name={isMuted ? 'volume-mute' : 'musical-notes'}
+                size={14}
+                color={isMuted ? '#94A3B8' : '#00E5FF'}
+              />
+              <Text
+                style={[styles.soundToggleText, { color: isMuted ? '#94A3B8' : '#00E5FF' }]}
+                numberOfLines={1}
+              >
+                {isMuted ? 'MUTED' : 'BGM'}
+              </Text>
+            </Pressable>
           </View>
         </View>
 
@@ -101,9 +151,9 @@ export default function Home() {
                 {/* Micro Header Row */}
                 <View style={styles.heroMicroHeader}>
                   <View style={styles.heroStatusTag}>
-                    <Text style={styles.heroStatusTagText}>[ CARTRIDGE SYSTEM ]</Text>
+                    <Text style={styles.heroStatusTagText} numberOfLines={1}>[ CARTRIDGE SYSTEM ]</Text>
                   </View>
-                  <Text style={styles.heroCreditText}>CREDIT: 02</Text>
+                  <Text style={styles.heroCreditText} numberOfLines={1}>CREDIT: 02</Text>
                 </View>
 
                 {/* Hero Title in High-Contrast Pixel Typography */}
@@ -122,7 +172,11 @@ export default function Home() {
 
             {/* Symmetrical Category Navigation */}
             <View style={styles.categorySection}>
-              <View style={styles.categoryTabs}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoryTabsScroll}
+              >
                 {CATEGORIES.map((cat) => {
                   const isActive = activeCategory === cat;
                   return (
@@ -139,15 +193,16 @@ export default function Home() {
                           styles.catTabText,
                           isActive && styles.catTabTextActive,
                         ]}
+                        numberOfLines={1}
                       >
                         {cat}
                       </Text>
                     </Pressable>
                   );
                 })}
-              </View>
+              </ScrollView>
 
-              <Text style={styles.gameCountNotice}>
+              <Text style={styles.gameCountNotice} numberOfLines={1}>
                 CATALOG: {filteredGames.length}/{allGames.length}
               </Text>
             </View>
@@ -204,6 +259,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  soundToggleBtn: {
+    position: 'absolute',
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    backgroundColor: '#141320',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderTopColor: 'rgba(255, 255, 255, 0.18)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  soundToggleBtnPressed: {
+    backgroundColor: '#1C1A2E',
+    transform: [{ scale: 0.95 }],
+  },
+  soundToggleText: {
+    fontFamily: Fonts.pixel,
+    fontSize: 7.5,
+    includeFontPadding: false,
   },
   brandGroup: {
     flexDirection: 'row',
@@ -215,8 +299,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#141320',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -240,9 +324,9 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontFamily: Fonts.pixel,
-    fontSize: 20,
+    fontSize: 16,
     color: '#FFFFFF',
-    letterSpacing: 2.5,
+    includeFontPadding: false,
     textShadowColor: 'rgba(167, 139, 250, 0.55)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
@@ -273,7 +357,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.pixel,
     fontSize: 8,
     color: '#CBD5E1',
-    letterSpacing: 0.8,
+    includeFontPadding: false,
   },
   // ── Scroll Content ────────────────────────────────────────────────────────────
   scrollContent: {
@@ -344,21 +428,21 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.pixel,
     fontSize: 7.5,
     color: '#C4B5FD',
-    letterSpacing: 0.8,
+    includeFontPadding: false,
   },
   heroCreditText: {
     fontFamily: Fonts.pixel,
     fontSize: 7.5,
     color: '#FBBF24',
-    letterSpacing: 0.8,
+    includeFontPadding: false,
   },
   heroTitle: {
     fontFamily: Fonts.pixel,
-    fontSize: 15,
+    fontSize: 13,
     color: '#FFFFFF',
-    letterSpacing: 1.2,
-    lineHeight: 22,
+    lineHeight: 20,
     marginBottom: 8,
+    includeFontPadding: false,
   },
   heroTitleAccent: {
     color: '#A78BFA',
@@ -369,10 +453,10 @@ const styles = StyleSheet.create({
   },
   heroSubtitleText: {
     fontFamily: Fonts.pixel,
-    fontSize: 8.5,
+    fontSize: 7.5,
     color: '#94A3B8',
-    letterSpacing: 0.8,
     lineHeight: 14,
+    includeFontPadding: false,
   },
   // ── Arcade Control Cluster (Right Side Accent) ────────────────────────────────
   arcadeCluster: {
@@ -439,22 +523,18 @@ const styles = StyleSheet.create({
   // ── Categories ────────────────────────────────────────────────────────────────
   categorySection: {
     width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: 16,
-    flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
-  categoryTabs: {
+  categoryTabsScroll: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
+    gap: 8,
+    paddingRight: 12,
   },
   catTab: {
-    paddingHorizontal: 11,
-    paddingVertical: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 5,
     backgroundColor: '#141320',
     borderWidth: 1,
@@ -468,7 +548,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.pixel,
     fontSize: 8,
     color: '#71717A',
-    letterSpacing: 0.6,
+    includeFontPadding: false,
   },
   catTabTextActive: {
     color: '#FFFFFF',
@@ -477,7 +557,8 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.pixel,
     fontSize: 7.5,
     color: '#71717A',
-    letterSpacing: 0.8,
+    includeFontPadding: false,
+    marginTop: 4,
   },
   // ── Grid & Footer ─────────────────────────────────────────────────────────────
   grid: {
